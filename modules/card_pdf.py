@@ -210,7 +210,7 @@ def build_single_card(article, output_path, date_fr, model_used):
 def build_card_pdfs(articles, cfg, date_str, date_fr):
     cards_dir = os.path.join(cfg["output"]["base_dir"], date_str, "cards")
     os.makedirs(cards_dir, exist_ok=True)
-    model_used = cfg["translation"]["model"]
+    model_used = "BART / Helsinki-NLP"
 
     for a in articles:
         path = os.path.join(cards_dir, f"card_{a['id']}.pdf")
