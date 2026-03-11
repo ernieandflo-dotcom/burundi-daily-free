@@ -1,18 +1,10 @@
 """
 modules/translator.py — FREE VERSION (fixed)
-─────────────────────────────────────────────
-Uses Hugging Face Inference API v2 (new endpoint, 2024+).
-  EN → FR : Helsinki-NLP/opus-mt-en-fr
-  SW → FR : Helsinki-NLP/opus-mt-swc-fr
-  Others  : fallback — keep original text, add note
-
-Never crashes — every failure degrades gracefully.
 """
 
 import time
 import requests
 
-# ── New HF Inference API endpoint (v2) ──
 HF_API_URL = "https://router.huggingface.co/hf-inference/models"
 
 LANG_NAMES = {
@@ -27,20 +19,15 @@ HF_TRANSLATION_MODELS = {
     "AR": "Helsinki-NLP/opus-mt-ar-fr",
 }
 
-
 def hf_translate(text, hf_key, model, retries=2):
     if not text or not text.strip():
         return ""
-
     headers = {"Authorization": f"Bearer {hf_key}"}
     payload = {"inputs": text[:512]}
     url     = f"{HF_API_URL}/{model}"
-
     for attempt in range(retries):
         try:
             resp = requests.post(url, headers=headers, json=payload, timeout=45)
-
-            # Model loading
             if resp.status_code == 503:
                 wait = 20
                 try:
@@ -50,76 +37,47 @@ def hf_translate(text, hf_key, model, retries=2):
                 print(f"      ⏳ Modèle traduction en chargement, attente {min(wait,30)}s...")
                 time.sleep(min(wait, 30))
                 continue
-
-            # Model gone
             if resp.status_code in (404, 410):
                 print(f"      ⚠️  Modèle traduction indisponible ({resp.status_code}): {model}")
                 return ""
-
             resp.raise_for_status()
             data = resp.json()
-
-            # New API returns list of dicts with "translation_text"
             if isinstance(data, list) and data:
-                result = data[0]
-                # Safe key access — the KeyError Copilot mentioned
-                return (
-                    result.get("translation_text") or
-                    result.get("generated_text") or
-                    ""
-                ).strip()
-
+                return (data[0].get("translation_text") or data[0].get("generated_text") or "").strip()
             if isinstance(data, dict):
-                return (
-                    data.get("translation_text") or
-                    data.get("generated_text") or
-                    ""
-                ).strip()
-
+                return (data.get("translation_text") or data.get("generated_text") or "").strip()
         except requests.exceptions.Timeout:
             print(f"      ⚠️  Timeout traduction (tentative {attempt+1}/{retries})")
             time.sleep(5)
         except Exception as e:
             print(f"      ⚠️  HF translate error: {e}")
             break
-
     return ""
-
 
 def translate_all(articles, cfg):
     hf_key = cfg.get("hf_api_key", "")
-
     for a in articles:
         lang = a.get("lang_original", "EN").upper()
-
-        # Already French — nothing to do
         if lang == "FR":
             a["summary_fr"]       = a.get("summary_original", "")
             a["lang_display"]     = "FR"
             a["translation_note"] = None
             continue
-
-        # No model for this language
         model = HF_TRANSLATION_MODELS.get(lang)
         if not model:
             a["summary_fr"]       = a.get("summary_original", "")
             a["lang_display"]     = lang
             a["translation_note"] = f"Traduction non disponible pour {LANG_NAMES.get(lang, lang)}"
             continue
-
         lang_name  = LANG_NAMES.get(lang, lang.lower())
         source_txt = a.get("summary_original", "")
-
         translated = hf_translate(source_txt, hf_key, model) if hf_key else ""
-
         if translated:
             a["summary_fr"]       = translated
             a["lang_display"]     = f"{lang}→FR"
             a["translation_note"] = f"Traduit de l'{lang_name} · Helsinki-NLP/opus-mt"
         else:
-            # Graceful fallback — keep original, flag it
             a["summary_fr"]       = source_txt
             a["lang_display"]     = lang
             a["translation_note"] = f"Traduction échouée — texte original ({lang_name})"
-
     return articles
