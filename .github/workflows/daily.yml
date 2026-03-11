@@ -2,8 +2,7 @@ name: Burundi Daily Intelligence (Free)
 
 on:
   schedule:
-    # 05:30 UTC = 07:30 Bujumbura (UTC+2)
-    - cron: '30 9 * * *'
+    - cron: '30 9 * * *'   # 09:30 UTC = 11:30 Bujumbura (UTC+2)
   workflow_dispatch:
 
 jobs:
@@ -11,6 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout repository
@@ -35,13 +40,14 @@ jobs:
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
         run: python run.py
 
-      - name: Set date
-        run: echo "TODAY=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './output'
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./output
-          keep_files: true
-          commit_message: "📰 Daily update — ${{ env.TODAY }}"
+        id: deployment
+        uses: actions/deploy-pages@v4
