@@ -1,0 +1,57 @@
+# ══════════════════════════════════════════════════════
+#  Burundi Daily Intelligence — FREE VERSION Config
+#  Seul secret requis : HF_API_KEY (compte gratuit HF)
+# ══════════════════════════════════════════════════════
+
+# ── HUGGING FACE (gratuit — huggingface.co/settings/tokens) ──
+hf_api_key: ""          # Laissez vide ici — stocké dans GitHub Secrets
+
+# ── MODÈLES GRATUITS ──
+models:
+  summarizer:   "facebook/bart-large-cnn"          # Résumés anglais
+  summarizer_fr: "moussaKam/barthez-orangesum-abstract" # Résumés français
+  translator_en_fr: "Helsinki-NLP/opus-mt-en-fr"   # EN → FR
+  translator_sw_fr: "Helsinki-NLP/opus-mt-swc-fr"  # Swahili → FR
+  translator_rn_fr: "Helsinki-NLP/opus-mt-fr-fr"   # Kirundi (fallback FR)
+
+# ── RECHERCHE ──
+search:
+  queries:
+    - "Burundi business news today"
+    - "actualités économiques Burundi"
+    - "Burundi government contracts appel offres"
+    - "Burundi startup entrepreneur jeune"
+    - "entreprises Burundi investissement"
+    - "Burundi bourse marché financier"
+    - "Bujumbura commerce industrie"
+    - "Burundi nouvelles ventures 2026"
+  max_results_per_query: 5
+  min_authority_score: 2
+  days_back: 1
+
+# ── SOURCES DE CONFIANCE ──
+trusted_sources:
+  - iwacu-burundi.org
+  - brb.bi
+  - armp.bi
+  - gov.bi
+  - theeastafrican.co.ke
+  - disruptafrica.com
+  - bujumburatimes.com
+  - rfi.fr
+  - bbc.com/afrique
+
+# ── TTS (gTTS — entièrement gratuit, aucune clé) ──
+tts:
+  language: "fr"
+  slow: false
+
+# ── SORTIE ──
+output:
+  base_dir: "./output"
+  keep_days: 30
+  auto_open: true
+
+# ── GITHUB PAGES ──
+github:
+  pages_url: "https://VOTRE_USERNAME.github.io/burundi-daily-free"

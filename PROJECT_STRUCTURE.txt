@@ -1,0 +1,137 @@
+═══════════════════════════════════════════════════════════════
+  BURUNDI DAILY INTELLIGENCE — VERSION GRATUITE
+  Structure du projet
+═══════════════════════════════════════════════════════════════
+
+burundi-daily-free/
+│
+├── .github/
+│   └── workflows/
+│       └── daily.yml           ← GitHub Actions : tâche planifiée quotidienne
+│                                 Tourne à 07h30 (Bujumbura) sur serveurs GitHub
+│
+├── modules/                    ← Moteur Python
+│   ├── __init__.py
+│   ├── scraper.py              ← DuckDuckGo + extraction article/YouTube (gratuit)
+│   ├── summarizer.py           ← Résumés BART via Hugging Face (gratuit)
+│   │                             + extraction regex chiffres/entités (gratuit)
+│   ├── translator.py           ← Helsinki-NLP via Hugging Face (gratuit)
+│   ├── tts.py                  ← gTTS via Google Translate (gratuit, sans clé)
+│   ├── pdf_builder.py          ← Rapport PDF complet — ReportLab (gratuit)
+│   ├── card_pdf.py             ← Cartes PDF individuelles — ReportLab (gratuit)
+│   └── html_builder.py         ← Viewer HTML quotidien (gratuit)
+│
+├── output/                     ← Généré automatiquement chaque matin
+│   ├── index.html              ← Rapport du jour (URL GitHub Pages fixe)
+│   └── 2026-03-11/
+│       ├── index.html          ← Viewer interactif
+│       ├── report.pdf          ← Rapport PDF complet
+│       ├── cards/
+│       │   ├── card_a1.pdf     ← Carte individuelle téléchargeable
+│       │   └── ...
+│       └── audio/
+│           ├── article_a1_fr.mp3
+│           └── ...
+│
+├── run.py                      ← Point d'entrée unique
+├── config.yaml                 ← Réglages (sans clés API)
+├── requirements.txt            ← Dépendances Python
+├── PROJECT_STRUCTURE.txt       ← Ce fichier
+└── README.md                   ← Guide de démarrage (5 minutes)
+
+
+═══════════════════════════════════════════════════════════════
+  STACK TECHNOLOGIQUE — 100% GRATUIT
+═══════════════════════════════════════════════════════════════
+
+  Fonction              Outil                         Coût
+  ─────────────────────────────────────────────────────────
+  Recherche web         DuckDuckGo Search             GRATUIT
+  Contenu articles      requests + BeautifulSoup       GRATUIT
+  Transcription vidéo   youtube-transcript-api         GRATUIT
+  Résumés               facebook/bart-large-cnn        GRATUIT
+                        (Hugging Face Inference API)
+  Traduction FR         Helsinki-NLP/opus-mt-en-fr     GRATUIT
+                        (Hugging Face Inference API)
+  Audio TTS             gTTS (Google Translate)        GRATUIT
+  PDF rapport           ReportLab                      GRATUIT
+  PDF cartes            ReportLab                      GRATUIT
+  Viewer HTML           HTML/CSS/JS pur                GRATUIT
+  Hébergement           GitHub Pages                   GRATUIT
+  Exécution auto        GitHub Actions (150min/mois)   GRATUIT
+  ─────────────────────────────────────────────────────────
+  TOTAL                                                0 €
+
+
+═══════════════════════════════════════════════════════════════
+  FLUX DE DONNÉES
+═══════════════════════════════════════════════════════════════
+
+  GitHub Actions déclenche run.py à 07h30
+         │
+         ▼
+  [1] scraper.py
+      DuckDuckGo (gratuit) → URLs → fetch texte / transcript YouTube
+         │
+         ▼
+  [2] summarizer.py
+      Hugging Face BART (gratuit) → résumé automatique
+      Regex → chiffres clés + entités
+      Heuristique → scores de pertinence locale/régionale/internationale
+         │
+         ▼
+  [3] translator.py
+      Helsinki-NLP (gratuit) → traduction française si nécessaire
+         │
+         ▼
+  [4] tts.py
+      gTTS (gratuit) → MP3 français, aucune clé requise
+         │
+         ▼
+  [5] pdf_builder.py → report.pdf
+  [6] card_pdf.py    → cards/card_a1.pdf, card_a2.pdf …
+  [7] html_builder.py → index.html (viewer interactif)
+         │
+         ▼
+  GitHub Pages publie output/
+  URL : https://VOTRE_USERNAME.github.io/burundi-daily-free/
+
+
+═══════════════════════════════════════════════════════════════
+  DIFFÉRENCES VS VERSION PAYANTE (Claude API)
+═══════════════════════════════════════════════════════════════
+
+  Aspect               Version gratuite        Version payante
+  ─────────────────────────────────────────────────────────────
+  Coût mensuel         0 €                     ~1–2 € (Claude API)
+  Qualité résumés      Correcte (BART)         Excellente (Claude)
+  Qualité traduction   Bonne (Helsinki-NLP)    Naturelle (Claude)
+  Extraction entités   Regex basique           Précise (Claude)
+  Pertinence scores    Heuristique             Contextuelle (Claude)
+  Fiabilité TTS        Bonne (gTTS)            Excellente (WaveNet)
+  Secret requis        HF_API_KEY (gratuit)    ANTHROPIC_API_KEY (~1–2€/mois)
+
+
+═══════════════════════════════════════════════════════════════
+  MISE EN PLACE (5 étapes, ~15 minutes)
+═══════════════════════════════════════════════════════════════
+
+  1. Créer un compte gratuit sur huggingface.co
+     → huggingface.co/settings/tokens → New token (rôle : Read)
+     → Copiez votre token (commence par hf_...)
+
+  2. Créer un dépôt GitHub PUBLIC nommé "burundi-daily-free"
+
+  3. Uploader tous ces fichiers dans ce dépôt
+
+  4. Activer GitHub Pages :
+     Settings → Pages → Source : GitHub Actions
+
+  5. Ajouter votre clé HF dans GitHub Secrets :
+     Settings → Secrets and variables → Actions → New secret
+       • HF_API_KEY → votre token Hugging Face
+
+  Déclencher manuellement la première fois :
+     Actions → "Burundi Daily Intelligence (Free)" → Run workflow
+
+  ✅ URL mobile : https://VOTRE_USERNAME.github.io/burundi-daily-free/

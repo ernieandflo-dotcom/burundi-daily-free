@@ -1,0 +1,47 @@
+name: Burundi Daily Intelligence (Free)
+
+on:
+  schedule:
+    # 05:30 UTC = 07:30 Bujumbura (UTC+2)
+    - cron: '30 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run daily script
+        env:
+          HF_API_KEY: ${{ secrets.HF_API_KEY }}
+        run: python run.py
+
+      - name: Set date
+        run: echo "TODAY=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./output
+          keep_files: true
+          commit_message: "📰 Daily update — ${{ env.TODAY }}"
