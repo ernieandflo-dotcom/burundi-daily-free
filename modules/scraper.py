@@ -1,7 +1,8 @@
 """
 modules/scraper.py
-Recherche DuckDuckGo + extraction article / transcription YouTube.
-Identique dans les versions gratuite et payante.
+7-layer Burundi Business Intelligence scraper.
+Sources: domestic media, East Africa, global finance,
+         development banks, government, China layer.
 """
 
 import time
@@ -11,12 +12,18 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from youtube_transcript_api import YouTubeTranscriptApi
 
-HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; BurundiDailyBot/1.0)"}
+HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; BurundiIntelBot/2.0)"}
 
-CATEGORY_KEYWORDS = {
-    "markets":   ["bourse","action","cotée","stock","marché financier","taux","banque","brb","franc burundais"],
-    "contracts": ["appel d'offres","marché public","contrat gouvernement","armp","tender","procurement"],
-    "ventures":  ["startup","entrepreneur","jeune","projet","école","université","venture","levée","innovation"],
+# ── FALLBACK category keywords (overridden by config if present) ──
+DEFAULT_CATEGORY_KEYWORDS = {
+    "markets":   ["bourse","action","cotée","stock","taux","banque","brb","franc burundais",
+                  "monetary","sovereign","commodity","nickel","mining","coffee","export"],
+    "contracts": ["appel d'offres","marché public","contrat","armp","tender","procurement",
+                  "infrastructure","construction","road","bridge","sinohydro","crbc","belt road"],
+    "ventures":  ["startup","entrepreneur","jeune","projet","université","venture","levée",
+                  "innovation","telecom","energie","renewable","fintech"],
+    "china":     ["china","chinese","chine","chinois","focac","belt road","bri",
+                  "sinohydro","crbc","xi jinping"],
 }
 
 def score_source(url, trusted_sources):
@@ -26,14 +33,18 @@ def score_source(url, trusted_sources):
             return 5
     if ".bi" in domain:
         return 4
-    if any(k in domain for k in ["reuters","bbc","eastafrican","monitor","rfi","africanews"]):
+    if any(k in domain for k in ["reuters","bbc","ft.com","economist","bloomberg",
+                                  "eastafrican","afdb","worldbank","imf","focac"]):
         return 4
     return 3
 
-def classify_category(title, snippet):
-    text = (title + " " + snippet).lower()
-    for cat, keywords in CATEGORY_KEYWORDS.items():
-        if any(k in text for k in keywords):
+def classify_category(title, snippet, cfg):
+    text     = (title + " " + snippet).lower()
+    keywords = cfg.get("category_keywords", DEFAULT_CATEGORY_KEYWORDS)
+    # Check china first — specific layer
+    for cat in ["china", "markets", "contracts", "ventures"]:
+        kws = keywords.get(cat, [])
+        if any(k in text for k in kws):
             return cat
     return "general"
 
@@ -41,23 +52,25 @@ def detect_language(text):
     fr_markers = ["le ","la ","les ","du ","de ","est ","une ","pour ","dans ","avec "]
     return "FR" if sum(1 for m in fr_markers if m in text.lower()) >= 3 else "EN"
 
-def search_ddg(query, max_results=5):
+def search_ddg(query, max_results=4):
     try:
         from duckduckgo_search import DDGS
         with DDGS() as ddgs:
-            return [{"title": r.get("title",""), "url": r.get("href",""), "snippet": r.get("body","")}
-                    for r in ddgs.text(query, max_results=max_results)]
+            return [
+                {"title": r.get("title",""), "url": r.get("href",""), "snippet": r.get("body","")}
+                for r in ddgs.text(query, max_results=max_results)
+            ]
     except Exception as e:
-        print(f"    ⚠️  Search error: {e}")
+        print(f"    ⚠️  Search error for '{query}': {e}")
         return []
 
 def fetch_article_text(url):
     try:
-        resp = requests.get(url, headers=HEADERS, timeout=10)
+        resp = requests.get(url, headers=HEADERS, timeout=12)
         soup = BeautifulSoup(resp.text, "html.parser")
-        for tag in soup(["script","style","nav","footer","aside","form","header"]):
+        for tag in soup(["script","style","nav","footer","aside","form","header","noscript"]):
             tag.decompose()
-        for sel in ["article",".article-body",".post-content",".entry-content","main"]:
+        for sel in ["article",".article-body",".post-content",".entry-content","main",".content"]:
             el = soup.select_one(sel)
             if el:
                 text = el.get_text(separator="\n", strip=True)
@@ -92,11 +105,12 @@ def scrape_all(cfg):
     articles  = []
     seen_urls = set()
     trusted   = cfg.get("trusted_sources", [])
+    max_per_q = cfg["search"].get("max_results_per_query", 4)
 
     for query in cfg["search"]["queries"]:
         print(f"    🔍 {query}")
-        results = search_ddg(query, cfg["search"].get("max_results_per_query", 5))
-        time.sleep(0.6)
+        results = search_ddg(query, max_results=max_per_q)
+        time.sleep(0.8)  # polite delay
 
         for r in results:
             url = r["url"]
@@ -114,17 +128,30 @@ def scrape_all(cfg):
             lang    = detect_language(title + " " + snippet)
 
             article = {
-                "id": f"a{len(articles)+1}", "title": title, "url": url,
-                "source": urlparse(url).netloc.replace("www.", ""),
-                "snippet": snippet, "authority": authority,
-                "lang_original": lang, "lang_display": lang,
-                "is_video": is_yt, "category": classify_category(title, snippet),
-                "time": datetime.now().strftime("%H:%M"),
-                "content": "", "transcript": None,
-                "summary_original": "", "summary_fr": "", "translation_note": None,
-                "key_figures": [], "key_entities": [],
-                "relevance_local": 70, "relevance_regional": 25, "relevance_international": 10,
-                "audio_path": None, "has_audio": False, "card_pdf_path": None,
+                "id":               f"a{len(articles)+1}",
+                "title":            title,
+                "url":              url,
+                "source":           urlparse(url).netloc.replace("www.", ""),
+                "snippet":          snippet,
+                "authority":        authority,
+                "lang_original":    lang,
+                "lang_display":     lang,
+                "is_video":         is_yt,
+                "category":         classify_category(title, snippet, cfg),
+                "time":             datetime.now().strftime("%H:%M"),
+                "content":          "",
+                "transcript":       None,
+                "summary_original": "",
+                "summary_fr":       "",
+                "translation_note": None,
+                "key_figures":      [],
+                "key_entities":     [],
+                "relevance_local":          70,
+                "relevance_regional":       25,
+                "relevance_international":  10,
+                "audio_path":       None,
+                "has_audio":        False,
+                "card_pdf_path":    None,
             }
 
             if is_yt:
