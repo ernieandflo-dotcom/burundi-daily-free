@@ -64,7 +64,7 @@ def build_pdf(articles, cfg, date_str, date_fr):
     story.append(Paragraph(date_fr, date_s))
     story.append(HRFlowable(width="100%", thickness=1.5, color=GOLD, spaceAfter=6))
     story.append(Paragraph(
-        f"{len(articles)} articles · Résumés FR · Modèle : {cfg['translation']['model']}",
+        f"{len(articles)} articles · Résumés FR · Modèle : {cfg['models']['translator_en_fr']}",
         S("Sub", fontName="Courier", fontSize=8, textColor=MUTED, spaceAfter=24)
     ))
 
