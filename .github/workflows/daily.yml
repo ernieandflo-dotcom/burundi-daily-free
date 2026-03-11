@@ -3,7 +3,7 @@ name: Burundi Daily Intelligence (Free)
 on:
   schedule:
     # 05:30 UTC = 07:30 Bujumbura (UTC+2)
-    - cron: '30 5 * * *'
+    - cron: '30 9 * * *'
   workflow_dispatch:
 
 jobs:
