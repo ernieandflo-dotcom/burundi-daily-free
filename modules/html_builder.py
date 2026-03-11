@@ -19,7 +19,7 @@ def build_html(articles, cfg, date_str, date_fr):
     html_path = os.path.join(out_dir, "index.html")
 
     # Build serialisable records
-    cat_order = ["general","markets","contracts","ventures"]
+    cat_order = ["general","markets","contracts","ventures","china"]
     grouped   = {c: [] for c in cat_order}
 
     for a in articles:
@@ -242,6 +242,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <button class="tab" onclick="switchTab('markets',this)">📈 Marchés</button>
     <button class="tab" onclick="switchTab('contracts',this)">🏛️ Contrats</button>
     <button class="tab" onclick="switchTab('ventures',this)">🌱 Entrepreneurs</button>
+    <button class="tab" onclick="switchTab('china',this)">🇨🇳 Chine</button>
   </div>
 </div>
 
@@ -315,7 +316,8 @@ function renderArticles(tab) {
 
   const labels = {
     general:'Actualités du jour', markets:'Marchés & Entreprises',
-    contracts:"Marchés publics & Appels d'offres", ventures:'Nouvelles Ventures'
+    contracts:"Marchés publics & Appels d'offres", ventures:'Nouvelles Ventures',
+    china:'Intelligence Chine–Burundi'
   };
   const hdr = document.createElement('div');
   hdr.className = 'section-hdr';
@@ -410,7 +412,7 @@ function renderArticles(tab) {
 // ── AUDIO SECTION ──
 function renderAudio() {
   const container = document.getElementById('audio-container');
-  const all = ['general','markets','contracts','ventures'].flatMap(c => DATA[c]||[]).filter(a => a.hasAudio);
+  const all = ['general','markets','contracts','ventures','china'].flatMap(c => DATA[c]||[]).filter(a => a.hasAudio);
 
   if (!all.length) {
     container.innerHTML = '<div class="empty">Aucun audio disponible aujourd\'hui.</div>';
