@@ -1,57 +1,176 @@
 # ══════════════════════════════════════════════════════
 #  Burundi Daily Intelligence — FREE VERSION Config
-#  Seul secret requis : HF_API_KEY (compte gratuit HF)
+#  7-layer intelligence source architecture
 # ══════════════════════════════════════════════════════
 
-# ── HUGGING FACE (gratuit — huggingface.co/settings/tokens) ──
-hf_api_key: ""          # Laissez vide ici — stocké dans GitHub Secrets
+hf_api_key: ""          # Stored in GitHub Secrets as HF_API_KEY
 
-# ── MODÈLES GRATUITS ──
+# ── MODELS ──
 models:
-  summarizer:   "facebook/bart-large-cnn"          # Résumés anglais
-  summarizer_fr: "moussaKam/barthez-orangesum-abstract" # Résumés français
-  translator_en_fr: "Helsinki-NLP/opus-mt-en-fr"   # EN → FR
-  translator_sw_fr: "Helsinki-NLP/opus-mt-swc-fr"  # Swahili → FR
-  translator_rn_fr: "Helsinki-NLP/opus-mt-fr-fr"   # Kirundi (fallback FR)
+  summarizer:    "facebook/bart-large-cnn"
+  summarizer_fr: "plguillou/t5-base-fr-sum-cnndm"
 
-# ── RECHERCHE ──
-search:
-  queries:
-    - "Burundi business news today"
-    - "actualités économiques Burundi"
-    - "Burundi government contracts appel offres"
-    - "Burundi startup entrepreneur jeune"
-    - "entreprises Burundi investissement"
-    - "Burundi bourse marché financier"
-    - "Bujumbura commerce industrie"
-    - "Burundi nouvelles ventures 2026"
-  max_results_per_query: 5
-  min_authority_score: 2
-  days_back: 1
-
-# ── SOURCES DE CONFIANCE ──
-trusted_sources:
-  - iwacu-burundi.org
-  - brb.bi
-  - armp.bi
-  - gov.bi
-  - theeastafrican.co.ke
-  - disruptafrica.com
-  - bujumburatimes.com
-  - rfi.fr
-  - bbc.com/afrique
-
-# ── TTS (gTTS — entièrement gratuit, aucune clé) ──
+# ── TTS ──
 tts:
   language: "fr"
   slow: false
 
-# ── SORTIE ──
+# ── OUTPUT ──
 output:
   base_dir: "./output"
   keep_days: 30
   auto_open: true
 
-# ── GITHUB PAGES ──
-github:
-  pages_url: "https://VOTRE_USERNAME.github.io/burundi-daily-free"
+# ══════════════════════════════════════════════════════
+#  SEARCH QUERIES — 7 intelligence layers
+# ══════════════════════════════════════════════════════
+search:
+  max_results_per_query: 4
+  min_authority_score: 2
+  days_back: 1
+
+  queries:
+
+    # ── LAYER 1 : Domestic Burundi media ──
+    - "site:iwacu-burundi.org economie"
+    - "site:burundi-eco.com"
+    - "site:breakingburundi.com business"
+    - "site:abpinfo.bi economie investissement"
+
+    # ── LAYER 2 : East Africa regional ──
+    - "Burundi site:theeastafrican.co.ke"
+    - "Burundi site:allafrica.com business"
+    - "Burundi site:theafricareport.com"
+
+    # ── LAYER 3 : African business & investment ──
+    - "Burundi site:african.business"
+    - "Burundi mining nickel site:miningweekly.com"
+    - "Burundi site:energycapitalpower.com"
+    - "Burundi telecom investment site:techafricanews.com"
+
+    # ── LAYER 4 : Global financial media ──
+    - "Burundi site:reuters.com"
+    - "Burundi economy site:ft.com OR site:economist.com"
+
+    # ── LAYER 5 : Development & multilateral ──
+    - "Burundi site:worldbank.org"
+    - "Burundi site:afdb.org"
+    - "Burundi site:imf.org"
+
+    # ── LAYER 6 : Government & regulatory ──
+    - "Burundi banque republique politique monetaire"
+    - "Burundi EAC East African Community trade"
+    - "Burundi investment promotion BIPA"
+    - "Burundi ministere finances reforme fiscale"
+
+    # ── LAYER 7 : China–Burundi intelligence ──
+    - "Burundi site:focac.org"
+    - "Burundi China investment infrastructure"
+    - "Burundi Belt Road Initiative chinois"
+    - "Sinohydro OR CRBC Burundi"
+
+# ══════════════════════════════════════════════════════
+#  TRUSTED SOURCES — authority score boosted to 5
+# ══════════════════════════════════════════════════════
+trusted_sources:
+  # Layer 1 — Domestic
+  - iwacu-burundi.org
+  - burundi-eco.com
+  - breakingburundi.com
+  - insideburundi.org
+  - abpinfo.bi
+  # Layer 2 — East Africa
+  - theeastafrican.co.ke
+  - theafricareport.com
+  - allafrica.com
+  - africanews.com
+  - newtimes.co.rw
+  # Layer 3 — Business & investment
+  - african.business
+  - businessdailyafrica.com
+  - miningweekly.com
+  - energycapitalpower.com
+  - techafricanews.com
+  # Layer 4 — Global financial
+  - reuters.com
+  - bloomberg.com
+  - ft.com
+  - economist.com
+  # Layer 5 — Development
+  - worldbank.org
+  - afdb.org
+  - imf.org
+  # Layer 6 — Government & regulatory
+  - brb.bi
+  - armp.bi
+  - gov.bi
+  - eac.int
+  # Layer 7 — China
+  - focac.org
+  - mfa.gov.cn
+  - bi.china-embassy.gov.cn
+
+# ══════════════════════════════════════════════════════
+#  CATEGORY KEYWORDS
+#  Used to route articles to the right tab in the viewer
+# ══════════════════════════════════════════════════════
+category_keywords:
+  markets:
+    - bourse
+    - action
+    - cotée
+    - stock
+    - taux
+    - banque
+    - brb
+    - franc burundais
+    - monetary policy
+    - sovereign debt
+    - commodity
+    - nickel
+    - mining
+    - gold
+    - coffee
+    - tea
+    - export
+  contracts:
+    - appel d'offres
+    - marché public
+    - contrat
+    - armp
+    - tender
+    - procurement
+    - infrastructure
+    - construction
+    - road
+    - bridge
+    - sinohydro
+    - crbc
+    - belt road
+  ventures:
+    - startup
+    - entrepreneur
+    - jeune
+    - projet
+    - école
+    - université
+    - venture
+    - levée de fonds
+    - incubateur
+    - innovation
+    - telecom
+    - energie
+    - renewable
+    - fintech
+  china:
+    - china
+    - chinese
+    - chine
+    - chinois
+    - focac
+    - belt road
+    - bri
+    - sinohydro
+    - crbc
+    - xi jinping
+    - mfa.gov.cn
